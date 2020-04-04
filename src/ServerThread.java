@@ -4,22 +4,40 @@ import java.nio.charset.StandardCharsets;
 
 public class ServerThread extends Thread {
 
-    protected Socket socket;
+    private Socket socket;
     private Player player;
-    private Communication communication;
+    private Communication communication; // TODO: później zmienić na private
 
-    public ServerThread(Socket clientSocket, int playerId) throws IOException {
+    // TODO: robiono eksperymentalnie
+    private GameServer gameServer;
+
+    public ServerThread(Socket clientSocket) throws IOException {
         this.socket = clientSocket;
         this.player = new Player();
-        player.setId(playerId);
         this.communication = new Communication(clientSocket);
+    }
+
+    public Player getPlayer(){
+        return player;
+    }
+
+    public Communication getCommunication(){
+        return communication;
+    }
+
+    public Socket getSocket(){
+        return socket;
+    }
+
+    public void setGameServer(GameServer gameServer){
+        // TODO: to w przyszłości może zostać zastąpione przez EventBus
+        this.gameServer = gameServer;
     }
 
     public void run(){
         System.out.println("Połączono nowego klienta: " + socket.getInetAddress());
         String line;
         while(true){
-
             try {
                 line = communication.receive();
                 if ((line == null) || line.equalsIgnoreCase("QUIT")){
@@ -43,6 +61,9 @@ public class ServerThread extends Thread {
            handleSetNickname(message);
         } else if (message.startsWith("PRINT")){
             handlePrint(message);
+        } else if (message.startsWith("SEND")){
+//            String toSend = message.split(":")[1];
+            gameServer.handleMessage(message, this);
         }
     }
 
@@ -71,6 +92,7 @@ public class ServerThread extends Thread {
     private void quit() {
         System.out.println("Disconnect: " + socket.getInetAddress());
         try {
+            gameServer.handleMessage("CLOSE", this);
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
