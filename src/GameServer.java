@@ -31,7 +31,7 @@ public class GameServer {
     }
 
     public void handleMessage(String message, ServerThread client){
-        if(message.startsWith("CLOSE")){
+        if(message.startsWith(Command.CLOSE)){
             // TODO: można dodać getAdress()
             System.out.println("Usunięto klienta: " + client.getSocket().getInetAddress());
             clients.remove(client);
@@ -47,5 +47,33 @@ public class GameServer {
         }
     }
 
-    // TODO: pomyśleć dokładnie, jakie komunikaty będą wysyłane
+    public void startGame() {
+        List<String> words = null;
+        try {
+            words = getWords();
+        } catch (IOException e) {
+            // TODO: zrobić jakiś komunikat o błędzie
+            return;
+        }
+        String wordsString = getWordsText(words);
+        System.out.println(wordsString);
+        for(ServerThread c: clients){
+            c.getCommunication().send(Command.WORDS + ":" + wordsString);
+        }
+    }
+
+    private String getWordsText(List<String> words){
+        String DELIMITER = ",";
+        StringBuilder builder = new StringBuilder();
+        for(String word: words){
+            builder.append(word);
+            builder.append(DELIMITER);
+        }
+        return builder.toString();
+    }
+
+    private List<String> getWords() throws IOException {
+        List<String> allWords = WordsHelper.readWords("resources/words.txt");
+        return WordsHelper.randomWords(allWords, 25);
+    }
 }

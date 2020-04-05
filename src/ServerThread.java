@@ -57,15 +57,18 @@ public class ServerThread extends Thread {
         if (message.equalsIgnoreCase("NICK")){
             handleShowNickname();
         }
-        else if(message.startsWith("NICK")){
+        else if(message.startsWith(Command.NICKNAME)){
            handleSetNickname(message);
-        } else if (message.startsWith("PRINT")){
+        } else if (message.startsWith(Command.ECHO)){
             handlePrint(message);
         } else if (message.startsWith("SEND")){
 //            String toSend = message.split(":")[1];
             gameServer.handleMessage(message, this);
+        } else if(message.startsWith(Command.START_GAME)){ // TODO: to będzie trzeba zmienić na READY czy coś takiego
+            gameServer.startGame();
         }
     }
+
 
     private void handleShowNickname(){
         if (player.getName() != null){
